@@ -1,0 +1,8 @@
+# Local-only — real contacts' names/phone numbers, not for GitHub.
+outreach/
+
+# Secrets, should anything ever land outside apps/mobile.
+.env
+.env.local
+
+.DS_Store
