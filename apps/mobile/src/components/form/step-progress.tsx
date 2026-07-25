@@ -27,7 +27,7 @@ export function StepProgress({ current, total, label }: StepProgressProps) {
       </View>
       {label ? (
         <ThemedText type="small" themeColor="textSecondary">
-          Step {current + 1} of {total} · {label}
+          Vaihe {current + 1}/{total} · {label}
         </ThemedText>
       ) : null}
     </View>

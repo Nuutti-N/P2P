@@ -30,7 +30,7 @@ const KNOWN: Record<string, Omit<VehicleInfo, 'plate'>> = {
     model: 'Corolla',
     year: '2017',
     mileageKm: '128000',
-    fuel: 'Petrol',
+    fuel: 'Bensiini',
     inspectionValidUntil: '2027-03-14',
   },
   'XYZ-789': {
@@ -45,7 +45,7 @@ const KNOWN: Record<string, Omit<VehicleInfo, 'plate'>> = {
 
 const MAKES = ['Toyota', 'Volkswagen', 'Skoda', 'Volvo', 'Ford', 'Nissan'];
 const MODELS = ['Corolla', 'Golf', 'Octavia', 'V60', 'Focus', 'Qashqai'];
-const FUELS = ['Petrol', 'Diesel', 'Hybrid'];
+const FUELS = ['Bensiini', 'Diesel', 'Hybridi'];
 
 function pick<T>(arr: readonly T[], seed: number): T {
   return arr[seed % arr.length];

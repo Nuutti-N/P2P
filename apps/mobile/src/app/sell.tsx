@@ -27,7 +27,7 @@ import { verifyIdentity } from '@/services/verification';
  *  - No insurance claims, no invented social proof.
  */
 
-const STEPS = ['Verify', 'Your car', 'Listing', 'Pickup', 'Review'] as const;
+const STEPS = ['Vahvistus', 'Autosi', 'Ilmoitus', 'Nouto', 'Yhteenveto'] as const;
 
 export default function SellScreen() {
   const insets = useSafeAreaInsets();
@@ -131,18 +131,18 @@ export default function SellScreen() {
         contentContainerStyle={contentPadding}>
         <ThemedView className="w-full gap-4" style={{ maxWidth: MaxContentWidth }}>
           <ThemedText type="title" className="text-center">
-            Thanks{sellerName ? `, ${sellerName.split(' ')[0]}` : ''} 👋
+            Kiitos{sellerName ? `, ${sellerName.split(' ')[0]}` : ''} 👋
           </ThemedText>
           <ThemedText themeColor="textSecondary" className="text-center">
-            Your car is in. One of the two founders will contact you directly by phone or email to
-            arrange the identity check and pickup.
+            Autosi tiedot on vastaanotettu. Joku perustajistamme ottaa sinuun yhteyttä puhelimitse
+            tai sähköpostitse sopiakseen henkilöllisyyden tarkistuksesta ja noudosta.
           </ThemedText>
-          <InfoNote tone="info" title="What happens next">
-            We verify the details, our driver picks up your car and delivers it to the buyer, and we
-            walk you through the paperwork. No app or account needed on your side.
+          <InfoNote tone="info" title="Mitä tapahtuu seuraavaksi">
+            Tarkistamme tiedot, kuljettajamme noutaa autosi ja toimittaa sen ostajalle, ja opastamme
+            sinut paperitöiden läpi. Et tarvitse sovellusta tai tiliä.
           </InfoNote>
           <PrimaryButton
-            title="List another car"
+            title="Listaa toinen auto"
             variant="secondary"
             onPress={() => {
               setDone(false);
@@ -174,45 +174,47 @@ export default function SellScreen() {
       <ThemedView className="w-full gap-4" style={{ maxWidth: MaxContentWidth }}>
         {step === 0 && (
           <View className="gap-2 self-stretch">
-            <ThemedText type="title">Sell your car without driving it anywhere.</ThemedText>
+            <ThemedText type="title">Myy autosi ajamatta sitä minnekään.</ThemedText>
             <ThemedText themeColor="textSecondary">
-              A driver comes to you, picks up the car, and delivers it to the buyer. You keep the
-              private-sale price — without the hassle or the distance.
+              Kuljettaja tulee luoksesi, noutaa auton ja toimittaa sen ostajalle. Saat
+              yksityiskaupan hinnan — ilman vaivaa tai matkaa.
             </ThemedText>
           </View>
         )}
-        <ThemedText type="subtitle">Sell your car</ThemedText>
+        <ThemedText type="subtitle">Myy autosi</ThemedText>
         <StepProgress current={step} total={STEPS.length} label={STEPS[step]} />
 
         {step === 0 && (
           <View className="gap-3 self-stretch">
             <ThemedText themeColor="textSecondary">
-              First, confirm it&apos;s really you. We check identity with Finnish bank ID or
-              Mobiilivarmenne — the same trust rails banks use.
+              Vahvista ensin, että olet todella sinä. Tarkistamme henkilöllisyyden
+              pankkitunnuksilla tai Mobiilivarmenteella — samoilla luottamusväylillä kuin pankit
+              käyttävät.
             </ThemedText>
             <View className="gap-2">
               <PrimaryButton
-                title="Verify with bank ID"
+                title="Vahvista pankkitunnuksilla"
                 variant={identityMethod === 'bank-id' && verified ? 'secondary' : 'primary'}
                 loading={verifying && identityMethod === 'bank-id'}
                 onPress={() => runVerify('bank-id')}
               />
               <PrimaryButton
-                title="Use Mobiilivarmenne"
+                title="Käytä Mobiilivarmennetta"
                 variant="secondary"
                 loading={verifying && identityMethod === 'mobiilivarmenne'}
                 onPress={() => runVerify('mobiilivarmenne')}
               />
             </View>
             {verified && (
-              <InfoNote tone="info" title="Identity confirmed">
-                Verified via {identityMethod === 'bank-id' ? 'bank ID' : 'Mobiilivarmenne'}. You can
-                continue.
+              <InfoNote tone="info" title="Henkilöllisyys vahvistettu">
+                Vahvistettu {identityMethod === 'bank-id' ? 'pankkitunnuksilla' : 'Mobiilivarmenteella'}.
+                Voit jatkaa.
               </InfoNote>
             )}
-            <InfoNote tone="demo" title="Demo — not connected yet">
-              This is a placeholder. The real flow redirects to the Finnish Trust Network (bank ID /
-              Mobiilivarmenne) through Signicat; no bank credentials are ever handled here.
+            <InfoNote tone="demo" title="Demo — ei vielä kytketty">
+              Tämä on paikkamerkki. Oikea toiminto ohjaa Suomi.fi-tunnistautumiseen
+              (pankkitunnukset / Mobiilivarmenne) Signicatin kautta; pankkitunnuksia ei koskaan
+              käsitellä täällä.
             </InfoNote>
           </View>
         )}
@@ -220,10 +222,10 @@ export default function SellScreen() {
         {step === 1 && (
           <View className="gap-3 self-stretch">
             <ThemedText themeColor="textSecondary">
-              Enter your license plate and we pull the car&apos;s details for you.
+              Syötä rekisterinumero, niin haemme auton tiedot puolestasi.
             </ThemedText>
             <TextField
-              label="License plate"
+              label="Rekisterinumero"
               placeholder="ABC-123"
               autoCapitalize="characters"
               autoCorrect={false}
@@ -231,39 +233,40 @@ export default function SellScreen() {
               onChangeText={setPlate}
             />
             <PrimaryButton
-              title={vehicleFound ? 'Look up again' : 'Look up my car'}
+              title={vehicleFound ? 'Hae uudelleen' : 'Hae autoni tiedot'}
               variant={vehicleFound ? 'secondary' : 'primary'}
               loading={lookingUp}
               onPress={runLookup}
             />
             {vehicleFound && (
               <>
-                <TextField label="Make" value={vehicle.make} onChangeText={(t) => updateVehicle('make', t)} />
-                <TextField label="Model" value={vehicle.model} onChangeText={(t) => updateVehicle('model', t)} />
+                <TextField label="Merkki" value={vehicle.make} onChangeText={(t) => updateVehicle('make', t)} />
+                <TextField label="Malli" value={vehicle.model} onChangeText={(t) => updateVehicle('model', t)} />
                 <TextField
-                  label="Year"
+                  label="Vuosimalli"
                   keyboardType="number-pad"
                   value={vehicle.year}
                   onChangeText={(t) => updateVehicle('year', t)}
                 />
                 <TextField
-                  label="Mileage (km)"
+                  label="Mittarilukema (km)"
                   keyboardType="number-pad"
                   value={vehicle.mileageKm}
                   onChangeText={(t) => updateVehicle('mileageKm', t)}
                 />
-                <TextField label="Fuel" value={vehicle.fuel} onChangeText={(t) => updateVehicle('fuel', t)} />
+                <TextField label="Polttoaine" value={vehicle.fuel} onChangeText={(t) => updateVehicle('fuel', t)} />
                 <TextField
-                  label="Inspection (katsastus) valid until"
+                  label="Katsastus voimassa asti"
                   value={vehicle.inspectionValidUntil}
                   onChangeText={(t) => updateVehicle('inspectionValidUntil', t)}
-                  hint="Pre-filled from the lookup — edit if it looks off."
+                  hint="Esitäytetty haun perusteella — muokkaa jos jokin vaikuttaa väärältä."
                 />
               </>
             )}
-            <InfoNote tone="demo" title="Demo — not connected yet">
-              These values are placeholders. In production the lookup reads Traficom&apos;s data by
-              registration number, so specs are verified rather than typed.
+            <InfoNote tone="demo" title="Demo — ei vielä kytketty">
+              Nämä arvot ovat paikkamerkkejä. Tuotannossa haku lukee Traficomin tiedot
+              rekisterinumeron perusteella, jolloin tiedot ovat vahvistettuja eikä käsin
+              kirjoitettuja.
             </InfoNote>
           </View>
         )}
@@ -271,19 +274,19 @@ export default function SellScreen() {
         {step === 2 && (
           <View className="gap-3 self-stretch">
             <ThemedText themeColor="textSecondary">
-              How much do you want for it, and anything a buyer should know?
+              Mitä haluat autosta pyytää, ja mitä ostajan tulisi tietää?
             </ThemedText>
             <TextField
-              label="Asking price (€)"
+              label="Pyyntihinta (€)"
               keyboardType="number-pad"
               placeholder="12500"
               value={askingPriceEur}
               onChangeText={setAskingPriceEur}
-              hint="No dealer margin is taken out — you keep more than a trade-in offer."
+              hint="Ei liikkeen katetta — saat enemmän kuin vaihtoautotarjouksesta."
             />
             <TextField
-              label="Description"
-              placeholder="Service history, extra tyres, why you're selling…"
+              label="Kuvaus"
+              placeholder="Huoltohistoria, vaihtorenkaat, miksi myyt…"
               multiline
               value={description}
               onChangeText={setDescription}
@@ -291,8 +294,8 @@ export default function SellScreen() {
               style={{ textAlignVertical: 'top' }}
             />
             <TextField
-              label="Known faults"
-              placeholder="Be honest — this is written into the bill of sale."
+              label="Tiedossa olevat viat"
+              placeholder="Ole rehellinen — tämä kirjataan kauppakirjaan."
               multiline
               value={knownFaults}
               onChangeText={setKnownFaults}
@@ -305,46 +308,46 @@ export default function SellScreen() {
         {step === 3 && (
           <View className="gap-3 self-stretch">
             <ThemedText themeColor="textSecondary">
-              Where should our driver pick up the car? You don&apos;t travel anywhere — the driver
-              comes to you and delivers it to the buyer.
+              Mistä kuljettajamme noutaa auton? Sinun ei tarvitse matkustaa minnekään —
+              kuljettaja tulee luoksesi ja toimittaa auton ostajalle.
             </ThemedText>
-            <TextField label="Your name" value={sellerName} onChangeText={setSellerName} placeholder="Matti Meikäläinen" />
+            <TextField label="Nimesi" value={sellerName} onChangeText={setSellerName} placeholder="Matti Meikäläinen" />
             <TextField
-              label="Phone number"
+              label="Puhelinnumero"
               keyboardType="phone-pad"
               value={phone}
               onChangeText={setPhone}
               placeholder="+358 40 123 4567"
             />
             <TextField
-              label="City or area"
+              label="Kaupunki tai alue"
               value={area}
               onChangeText={setArea}
               placeholder="Helsinki, Kallio"
-              hint="Used to schedule a driver near you."
+              hint="Käytetään kuljettajan aikatauluttamiseen lähelläsi."
             />
-            <InfoNote tone="info" title="Driver included">
-              A vetted driver picking up and delivering the car is part of the service, not an
-              add-on. We handle safety, paperwork and a condition check along the way.
+            <InfoNote tone="info" title="Kuljettaja sisältyy hintaan">
+              Tarkastettu kuljettaja noutaa ja toimittaa auton osana palvelua, ei lisämaksusta.
+              Hoidamme turvallisuuden, paperityöt ja kunnon tarkistuksen matkan varrella.
             </InfoNote>
           </View>
         )}
 
         {step === 4 && (
           <View className="gap-3 self-stretch">
-            <ThemedText themeColor="textSecondary">Quick check before you send it in.</ThemedText>
+            <ThemedText themeColor="textSecondary">Nopea tarkistus ennen lähettämistä.</ThemedText>
             <ThemedView type="backgroundElement" className="gap-2 rounded-2xl p-4">
-              <SummaryRow label="Identity" value={verified ? 'Verified' : 'Not verified'} />
-              <SummaryRow label="Car" value={`${vehicle.make} ${vehicle.model} ${vehicle.year}`.trim()} />
-              <SummaryRow label="Plate" value={normalisePlate(plate)} />
-              <SummaryRow label="Mileage" value={vehicle.mileageKm ? `${vehicle.mileageKm} km` : '—'} />
-              <SummaryRow label="Asking price" value={askingPriceEur ? `€${askingPriceEur}` : '—'} />
-              <SummaryRow label="Contact" value={`${sellerName} · ${phone}`} />
-              <SummaryRow label="Pickup area" value={area} />
+              <SummaryRow label="Henkilöllisyys" value={verified ? 'Vahvistettu' : 'Ei vahvistettu'} />
+              <SummaryRow label="Auto" value={`${vehicle.make} ${vehicle.model} ${vehicle.year}`.trim()} />
+              <SummaryRow label="Rekisterinumero" value={normalisePlate(plate)} />
+              <SummaryRow label="Mittarilukema" value={vehicle.mileageKm ? `${vehicle.mileageKm} km` : '—'} />
+              <SummaryRow label="Pyyntihinta" value={askingPriceEur ? `€${askingPriceEur}` : '—'} />
+              <SummaryRow label="Yhteystiedot" value={`${sellerName} · ${phone}`} />
+              <SummaryRow label="Noutoalue" value={area} />
             </ThemedView>
             <InfoNote tone="info">
-              By submitting you agree that a founder may contact you to arrange the identity check
-              and pickup. Nothing is charged now.
+              Lähettämällä hyväksyt, että perustaja voi ottaa sinuun yhteyttä sopiakseen
+              henkilöllisyyden tarkistuksesta ja noudosta. Mitään ei veloiteta nyt.
             </InfoNote>
           </View>
         )}
@@ -352,7 +355,7 @@ export default function SellScreen() {
         <View className="flex-row gap-2 self-stretch">
           {step > 0 && (
             <PrimaryButton
-              title="Back"
+              title="Takaisin"
               variant="secondary"
               className="flex-1"
               onPress={() => setStep((s) => s - 1)}
@@ -360,14 +363,14 @@ export default function SellScreen() {
           )}
           {step < STEPS.length - 1 ? (
             <PrimaryButton
-              title="Continue"
+              title="Jatka"
               disabled={!canContinue}
               className="flex-1"
               onPress={() => setStep((s) => s + 1)}
             />
           ) : (
             <PrimaryButton
-              title="Submit listing"
+              title="Lähetä ilmoitus"
               disabled={!canContinue}
               className="flex-1"
               onPress={submit}
