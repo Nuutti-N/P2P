@@ -4,7 +4,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { InfoNote } from '@/components/form/info-note';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { BottomTabInset, Spacing } from '@/constants/theme';
+import { useContentMaxWidth } from '@/hooks/use-desktop-layout';
 
 /**
  * Toimitukset — the differentiator: buyer + seller both follow where the car
@@ -15,6 +16,7 @@ import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
  */
 export default function ToimituksetScreen() {
   const insets = useSafeAreaInsets();
+  const contentMaxWidth = useContentMaxWidth();
 
   const contentPadding = {
     paddingTop: Platform.OS === 'web' ? Spacing.four : Spacing.two,
@@ -26,7 +28,7 @@ export default function ToimituksetScreen() {
       className="flex-1 bg-cream dark:bg-surface-dark"
       contentContainerClassName="flex-row justify-center px-4"
       contentContainerStyle={contentPadding}>
-      <ThemedView className="w-full gap-3" style={{ maxWidth: MaxContentWidth }}>
+      <ThemedView className="w-full gap-3" style={{ maxWidth: contentMaxWidth }}>
         <ThemedText type="subtitle">Toimitukset</ThemedText>
 
         <View className="items-center gap-2 rounded-2xl bg-beige px-4 py-8 dark:bg-surface-dark-element">

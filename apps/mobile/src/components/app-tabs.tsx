@@ -10,16 +10,27 @@ import { SymbolView, SymbolViewProps } from 'expo-symbols';
 import { Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import {
+  NavAvatarLink,
+  NavLogoLink,
+  NavSearchBox,
+  NavTextLink,
+  TopNavBar,
+} from '@/components/desktop-nav';
 import { ModeSwitch } from '@/components/mode-switch';
 import { ThemedText } from '@/components/themed-text';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { useIsDesktopWeb } from '@/hooks/use-desktop-layout';
 
 /**
  * One custom tab bar shared by web and native (no `NativeTabs`). The Figma
  * bottom bar is a flat, fully custom shape — OS-native tab chrome can't
  * reproduce it, and staying on one implementation avoids web/native drift.
- * Web is the priority target for now (see plan), so this is tuned for that
- * first.
+ *
+ * Above the desktop breakpoint on web, the same TabTrigger set (so routing
+ * and active-tab state stay identical) renders inside a top nav bar
+ * (desktop-nav.tsx) instead of the bottom bar. Narrow web viewports and
+ * native keep the bottom tab bar unchanged.
  */
 const TABS = [
   { name: 'index', href: '/', label: 'Etusivu', icon: { ios: 'house.fill', android: 'home', web: 'home' } },
@@ -50,23 +61,46 @@ const TABS = [
 ] as const satisfies { name: string; href: string; label: string; icon: SymbolViewProps['name'] }[];
 
 export default function AppTabs() {
+  const isDesktop = useIsDesktopWeb();
+
   return (
     // `Tabs`/`TabSlot` are expo-router/ui primitives, not NativeWind-styled
     // core components — they take `style`, not `className`.
     <Tabs style={{ flex: 1 }}>
+      <TabList asChild>
+        {isDesktop ? (
+          <TopNavBar>
+            <TabTrigger name="index" href="/" asChild>
+              <NavLogoLink />
+            </TabTrigger>
+            <TabTrigger name="explore" href="/explore" asChild>
+              <NavTextLink label="Selaa" />
+            </TabTrigger>
+            <NavSearchBox />
+            <TabTrigger name="sell" href="/sell" asChild>
+              <NavTextLink label="Myy autosi" />
+            </TabTrigger>
+            <TabTrigger name="toimitukset" href="/toimitukset" asChild>
+              <NavTextLink label="Toimitukset" />
+            </TabTrigger>
+            <TabTrigger name="profiili" href="/profiili" asChild>
+              <NavAvatarLink />
+            </TabTrigger>
+          </TopNavBar>
+        ) : (
+          <BottomBar>
+            {TABS.map((tab) => (
+              <TabTrigger key={tab.name} name={tab.name} href={tab.href} asChild>
+                <TabButton icon={tab.icon} label={tab.label} />
+              </TabTrigger>
+            ))}
+          </BottomBar>
+        )}
+      </TabList>
       <View className="flex-1">
-        <ModeSwitch />
+        {!isDesktop && <ModeSwitch />}
         <TabSlot style={{ flex: 1 }} />
       </View>
-      <TabList asChild>
-        <BottomBar>
-          {TABS.map((tab) => (
-            <TabTrigger key={tab.name} name={tab.name} href={tab.href} asChild>
-              <TabButton icon={tab.icon} label={tab.label} />
-            </TabTrigger>
-          ))}
-        </BottomBar>
-      </TabList>
     </Tabs>
   );
 }

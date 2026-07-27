@@ -8,9 +8,10 @@ import { StepProgress } from '@/components/form/step-progress';
 import { TextField } from '@/components/form/text-field';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { BottomTabInset, Spacing } from '@/constants/theme';
 import { addListing, makeListingId } from '@/features/sell/store';
 import { emptyVehicle, type IdentityMethod, type VehicleInfo } from '@/features/sell/types';
+import { useContentMaxWidth } from '@/hooks/use-desktop-layout';
 import { lookupPlate, normalisePlate } from '@/services/plate-lookup';
 import { verifyIdentity } from '@/services/verification';
 
@@ -31,6 +32,7 @@ const STEPS = ['Vahvistus', 'Autosi', 'Ilmoitus', 'Nouto', 'Yhteenveto'] as cons
 
 export default function SellScreen() {
   const insets = useSafeAreaInsets();
+  const contentMaxWidth = useContentMaxWidth();
 
   const [step, setStep] = useState(0);
   const [done, setDone] = useState(false);
@@ -129,7 +131,7 @@ export default function SellScreen() {
         className="flex-1 bg-cream dark:bg-surface-dark"
         contentContainerClassName="flex-grow items-center justify-center px-4"
         contentContainerStyle={contentPadding}>
-        <ThemedView className="w-full gap-4" style={{ maxWidth: MaxContentWidth }}>
+        <ThemedView className="w-full gap-4" style={{ maxWidth: contentMaxWidth }}>
           <ThemedText type="title" className="text-center">
             Kiitos{sellerName ? `, ${sellerName.split(' ')[0]}` : ''} 👋
           </ThemedText>
@@ -171,7 +173,7 @@ export default function SellScreen() {
       contentContainerClassName="flex-row justify-center px-4"
       contentContainerStyle={contentPadding}
       keyboardShouldPersistTaps="handled">
-      <ThemedView className="w-full gap-4" style={{ maxWidth: MaxContentWidth }}>
+      <ThemedView className="w-full gap-4" style={{ maxWidth: contentMaxWidth }}>
         {step === 0 && (
           <View className="gap-2 self-stretch">
             <ThemedText type="title">Myy autosi ajamatta sitä minnekään.</ThemedText>

@@ -6,11 +6,13 @@ import { InfoNote } from '@/components/form/info-note';
 import { PrimaryButton } from '@/components/form/primary-button';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { BottomTabInset, Spacing } from '@/constants/theme';
 import { getListings } from '@/features/sell/store';
+import { useContentMaxWidth } from '@/hooks/use-desktop-layout';
 
 export default function ProfiiliScreen() {
   const insets = useSafeAreaInsets();
+  const contentMaxWidth = useContentMaxWidth();
   const [showDriverNote, setShowDriverNote] = useState(false);
 
   const myListings = getListings();
@@ -25,7 +27,7 @@ export default function ProfiiliScreen() {
       className="flex-1 bg-cream dark:bg-surface-dark"
       contentContainerClassName="flex-row justify-center px-4"
       contentContainerStyle={contentPadding}>
-      <ThemedView className="w-full gap-4" style={{ maxWidth: MaxContentWidth }}>
+      <ThemedView className="w-full gap-4" style={{ maxWidth: contentMaxWidth }}>
         <ThemedText type="subtitle">Profiili</ThemedText>
 
         <ThemedView type="backgroundElement" className="gap-1 rounded-2xl p-4">
