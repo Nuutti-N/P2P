@@ -40,10 +40,9 @@ export default function ToimituksetScreen() {
           </ThemedText>
         </View>
 
-        <InfoNote tone="info" title="Pilotissa vielä käsin">
-          Syce on juuri alkamassa. Kaksi perustajaa sopivat noudot ja toimitukset tällä hetkellä
-          käsin Mikkeli–Helsinki-alueella. Reaaliaikainen seuranta rakennetaan sitä mukaa kun
-          oikeita toimituksia on tehty.
+        <InfoNote tone="info" title="Sovimme toimitukset henkilökohtaisesti">
+          Sovimme noudot ja toimitukset kanssasi suoraan Mikkeli–Helsinki-alueella. Reaaliaikainen
+          seuranta tulee tähän näkymään.
         </InfoNote>
       </ThemedView>
     </ScrollView>
