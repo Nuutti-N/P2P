@@ -1,14 +1,10 @@
-/**
- * Learn more about light and dark modes:
- * https://docs.expo.dev/guides/color-schemes/
- */
-
 import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 
+/**
+ * Dark mode is off for now (see tailwind.config.js) — hardcode light here too
+ * so JS-computed colors (icon tints, placeholder text, etc.) stay in sync
+ * with the Tailwind `dark:` classes that are already inert.
+ */
 export function useTheme() {
-  const scheme = useColorScheme();
-  const theme = scheme === 'unspecified' ? 'light' : scheme;
-
-  return Colors[theme];
+  return Colors.light;
 }

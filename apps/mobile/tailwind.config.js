@@ -2,6 +2,12 @@
 module.exports = {
   content: ['./src/app/**/*.{js,jsx,ts,tsx}', './src/components/**/*.{js,jsx,ts,tsx}', './src/features/**/*.{js,jsx,ts,tsx}'],
   presets: [require('nativewind/preset')],
+  // Dark mode is off for now — nothing ever applies a "dark" class, so every
+  // `dark:` utility in the app stays inert and light is forced everywhere.
+  // Flip back to 'media' (the Tailwind default) to resume following the
+  // system color scheme once dark mode is actually designed against the
+  // Metsä palette.
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
