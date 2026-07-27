@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { useMemo, useState } from 'react';
 import { Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
@@ -7,9 +7,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PrimaryButton } from '@/components/form/primary-button';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { BottomTabInset, Spacing } from '@/constants/theme';
 import { getListings } from '@/features/sell/store';
 import type { SellerListing } from '@/features/sell/types';
+import { useContentMaxWidth, useIsDesktopWeb } from '@/hooks/use-desktop-layout';
 import { useTheme } from '@/hooks/use-theme';
 
 import { ListingCard } from './listing-card';
@@ -31,12 +32,25 @@ export function BrowseFeed({
 }) {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const params = useLocalSearchParams<{ q?: string }>();
+  const isDesktop = useIsDesktopWeb();
+  const contentMaxWidth = useContentMaxWidth();
 
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(params.q ?? '');
   const [filtersOpen, setFiltersOpen] = useState(initialFiltersOpen);
   const [area, setArea] = useState<(typeof AREA_FILTERS)[number]>('Kaikki');
   const [maxPrice, setMaxPrice] = useState<number>(Infinity);
   const [selected, setSelected] = useState<SellerListing | null>(null);
+
+  // Keeps the field in sync when the nav search box (desktop-nav.tsx) sends a
+  // new query while this screen is already mounted — adjusted during render
+  // (React's documented pattern for this) rather than in an effect, so it
+  // doesn't cause an extra cascading render.
+  const [lastSeenQueryParam, setLastSeenQueryParam] = useState(params.q);
+  if (params.q !== lastSeenQueryParam) {
+    setLastSeenQueryParam(params.q);
+    if (typeof params.q === 'string') setQuery(params.q);
+  }
 
   const listings = getListings();
 
@@ -57,6 +71,13 @@ export function BrowseFeed({
     paddingBottom: insets.bottom + BottomTabInset + Spacing.four,
   };
 
+  // Desktop gets a real multi-column grid instead of one stacked column —
+  // computed as fixed card widths (flex-wrap) rather than CSS grid so the
+  // same layout code stays valid on native too.
+  const gridColumns = isDesktop ? 4 : 1;
+  const gridGap = Spacing.three;
+  const cardWidth = isDesktop ? (contentMaxWidth - gridGap * (gridColumns - 1)) / gridColumns : undefined;
+
   return (
     <>
       <ScrollView
@@ -64,7 +85,7 @@ export function BrowseFeed({
         contentContainerClassName="flex-row justify-center px-4"
         contentContainerStyle={contentPadding}
         keyboardShouldPersistTaps="handled">
-        <ThemedView className="w-full gap-3" style={{ maxWidth: MaxContentWidth }}>
+        <ThemedView className="w-full gap-3" style={{ maxWidth: contentMaxWidth }}>
           {variant === 'home' ? (
             <View className="gap-1">
               <ThemedText type="title" className="text-[28px] leading-8">
@@ -114,15 +135,23 @@ export function BrowseFeed({
             </View>
           )}
 
-          <View className="gap-3">
+          <View
+            className={isDesktop ? 'flex-row flex-wrap' : 'gap-3'}
+            style={isDesktop ? { gap: gridGap } : undefined}>
             {filtered.map((listing) => (
-              <ListingCard key={listing.id} listing={listing} onPress={() => setSelected(listing)} />
+              <View key={listing.id} style={isDesktop ? { width: cardWidth } : undefined}>
+                <ListingCard listing={listing} onPress={() => setSelected(listing)} />
+              </View>
             ))}
             {filtered.length === 0 && listings.length === 0 && (
-              <EmptyState onSell={() => router.push('/sell')} />
+              <View style={isDesktop ? { width: contentMaxWidth } : undefined}>
+                <EmptyState onSell={() => router.push('/sell')} />
+              </View>
             )}
             {filtered.length === 0 && listings.length > 0 && (
-              <ThemedText themeColor="textSecondary">Ei tuloksia näillä hakuehdoilla.</ThemedText>
+              <View style={isDesktop ? { width: contentMaxWidth } : undefined}>
+                <ThemedText themeColor="textSecondary">Ei tuloksia näillä hakuehdoilla.</ThemedText>
+              </View>
             )}
           </View>
         </ThemedView>

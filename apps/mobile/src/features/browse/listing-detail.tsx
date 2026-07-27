@@ -6,8 +6,9 @@ import { InfoNote } from '@/components/form/info-note';
 import { PrimaryButton } from '@/components/form/primary-button';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { MaxContentWidth, Spacing, TrustBadge } from '@/constants/theme';
+import { Spacing, TrustBadge } from '@/constants/theme';
 import type { SellerListing } from '@/features/sell/types';
+import { useContentMaxWidth } from '@/hooks/use-desktop-layout';
 import { useTheme } from '@/hooks/use-theme';
 
 /**
@@ -25,6 +26,7 @@ export function ListingDetail({
 }) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
+  const contentMaxWidth = useContentMaxWidth();
 
   return (
     <Modal visible={listing != null} animationType="slide" onRequestClose={onClose}>
@@ -33,7 +35,7 @@ export function ListingDetail({
           className="flex-1 bg-cream dark:bg-surface-dark"
           contentContainerClassName="flex-row justify-center px-4 pb-16"
           contentContainerStyle={{ paddingTop: insets.top + Spacing.three }}>
-          <ThemedView className="w-full gap-3" style={{ maxWidth: MaxContentWidth }}>
+          <ThemedView className="w-full gap-3" style={{ maxWidth: contentMaxWidth }}>
             <Pressable onPress={onClose} accessibilityRole="button" className="self-end">
               <ThemedView type="backgroundElement" className="h-9 w-9 items-center justify-center rounded-full">
                 <SymbolView
