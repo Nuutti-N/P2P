@@ -26,10 +26,10 @@ export const Colors = {
 
 export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
 
-/** CTA / accent — used for primary buttons and calls to action. */
+/** Secondary accent — small highlights only (search action, step progress). Not the primary CTA color. */
 export const Brand = '#A85D3F';
 
-/** Nav / primary brand color — tab bar, headers. Constant across light/dark. */
+/** Nav / primary brand color — tab bar, headers, and primary CTAs. Constant across light/dark. */
 export const NavBrand = '#1B4433';
 
 /** "Verified" signal — kept visually distinct from Brand so trust reads as special. */

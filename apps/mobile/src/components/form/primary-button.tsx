@@ -27,7 +27,7 @@ export function PrimaryButton({
       disabled={isDisabled}
       className={[
         'min-h-12 items-center justify-center self-stretch rounded-full px-4 py-3',
-        isPrimary ? 'bg-terracotta active:opacity-85' : 'bg-beige dark:bg-surface-dark-element active:opacity-85',
+        isPrimary ? 'bg-forest active:opacity-85' : 'bg-beige dark:bg-surface-dark-element active:opacity-85',
         isDisabled && 'opacity-50',
         className,
       ]
