@@ -69,10 +69,18 @@ export default function AppTabs() {
     <Tabs style={{ flex: 1 }}>
       <TabList asChild>
         {isDesktop ? (
+          // Wordmark alone in the left corner; everything else stays one group,
+          // centred in the space left over. The equal spacers do the centring —
+          // they can't be wrapper Views, because TabList reads its *direct*
+          // children to find the screens, and nesting a TabTrigger inside a View
+          // makes the navigator report "Couldn't find any screens".
           <TopNavBar>
             <TabTrigger name="index" href="/" asChild>
               <NavLogoLink />
             </TabTrigger>
+
+            <View className="flex-1" />
+
             <TabTrigger name="explore" href="/explore" asChild>
               <NavTextLink label="Selaa" />
             </TabTrigger>
@@ -86,6 +94,8 @@ export default function AppTabs() {
             <TabTrigger name="profiili" href="/profiili" asChild>
               <NavAvatarLink />
             </TabTrigger>
+
+            <View className="flex-1" />
           </TopNavBar>
         ) : (
           <BottomBar>
