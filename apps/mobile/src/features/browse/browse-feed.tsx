@@ -16,20 +16,10 @@ import { useTheme } from '@/hooks/use-theme';
 import { ListingCard } from './listing-card';
 import { ListingDetail } from './listing-detail';
 
-const AREA_FILTERS = ['Kaikki', 'Mikkeli', 'Helsinki'] as const;
-const PRICE_FILTERS = [
-  { label: 'Kaikki hinnat', max: Infinity },
-  { label: 'Alle 12 000 €', max: 12000 },
-  { label: 'Alle 20 000 €', max: 20000 },
-] as const;
+/** Chip label for "no location filter" — not a real area, so it can't clash with one. */
+const ALL_AREAS = 'Kaikki';
 
-export function BrowseFeed({
-  variant = 'browse',
-  initialFiltersOpen = false,
-}: {
-  variant?: 'home' | 'browse';
-  initialFiltersOpen?: boolean;
-}) {
+export function BrowseFeed({ variant = 'browse' }: { variant?: 'home' | 'browse' }) {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const params = useLocalSearchParams<{ q?: string }>();
@@ -37,9 +27,7 @@ export function BrowseFeed({
   const contentMaxWidth = useContentMaxWidth();
 
   const [query, setQuery] = useState(params.q ?? '');
-  const [filtersOpen, setFiltersOpen] = useState(initialFiltersOpen);
-  const [area, setArea] = useState<(typeof AREA_FILTERS)[number]>('Kaikki');
-  const [maxPrice, setMaxPrice] = useState<number>(Infinity);
+  const [area, setArea] = useState<string>(ALL_AREAS);
   const [selected, setSelected] = useState<SellerListing | null>(null);
 
   // Keeps the field in sync when the nav search box (desktop-nav.tsx) sends a
@@ -54,17 +42,31 @@ export function BrowseFeed({
 
   const listings = getListings();
 
+  // Location chips come from the listings themselves, never a hardcoded city
+  // list: a chip that can only ever return nothing reads as a broken filter,
+  // and naming fixed cities would imply we don't deliver elsewhere. With one
+  // area or none there's nothing to choose between, so the row disappears.
+  const areas = useMemo(() => {
+    const unique = [...new Set(listings.map((l) => l.area.trim()).filter(Boolean))].sort((a, b) =>
+      a.localeCompare(b, 'fi')
+    );
+    return unique.length > 1 ? [ALL_AREAS, ...unique] : [];
+  }, [listings]);
+
+  // If the selected area vanishes (its last listing sold), fall back to all
+  // rather than silently filtering everything out.
+  const activeArea = areas.includes(area) ? area : ALL_AREAS;
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return listings.filter((l) => {
       const matchesQuery =
         q === '' ||
         `${l.vehicle.make} ${l.vehicle.model} ${l.area}`.toLowerCase().includes(q);
-      const matchesArea = area === 'Kaikki' || l.area === area;
-      const matchesPrice = Number(l.askingPriceEur || 0) <= maxPrice;
-      return matchesQuery && matchesArea && matchesPrice;
+      const matchesArea = activeArea === ALL_AREAS || l.area.trim() === activeArea;
+      return matchesQuery && matchesArea;
     });
-  }, [listings, query, area, maxPrice]);
+  }, [listings, query, activeArea]);
 
   const contentPadding = {
     paddingTop: Platform.OS === 'web' ? Spacing.four : Spacing.two,
@@ -101,37 +103,15 @@ export function BrowseFeed({
             </ThemedText>
           )}
 
-          <View className="flex-row gap-2">
-            <ThemedView type="backgroundElement" className="flex-1 justify-center rounded-full px-4">
-              <SearchInput value={query} onChangeText={setQuery} />
-            </ThemedView>
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => setFiltersOpen((v) => !v)}
-              className="active:opacity-85">
-              <ThemedView type="backgroundElement" className="justify-center rounded-full px-4">
-                <ThemedText type="small">Suodattimet</ThemedText>
-              </ThemedView>
-            </Pressable>
-          </View>
+          <ThemedView type="backgroundElement" className="justify-center rounded-full px-4">
+            <SearchInput value={query} onChangeText={setQuery} />
+          </ThemedView>
 
-          {filtersOpen && (
-            <View className="gap-2">
-              <FilterRow label="Sijainti">
-                {AREA_FILTERS.map((a) => (
-                  <Chip key={a} label={a} active={area === a} onPress={() => setArea(a)} />
-                ))}
-              </FilterRow>
-              <FilterRow label="Hinta">
-                {PRICE_FILTERS.map((p) => (
-                  <Chip
-                    key={p.label}
-                    label={p.label}
-                    active={maxPrice === p.max}
-                    onPress={() => setMaxPrice(p.max)}
-                  />
-                ))}
-              </FilterRow>
+          {areas.length > 0 && (
+            <View className="flex-row flex-wrap gap-1">
+              {areas.map((a) => (
+                <Chip key={a} label={a} active={activeArea === a} onPress={() => setArea(a)} />
+              ))}
             </View>
           )}
 
@@ -177,7 +157,8 @@ function EmptyState({ onSell }: { onSell: () => void }) {
           Ei vielä ilmoituksia
         </ThemedText>
         <ThemedText type="small" themeColor="textSecondary" className="max-w-[280px] text-center">
-          Syce on juuri alkamassa Mikkeli–Helsinki-alueella. Ole ensimmäinen, joka listaa autonsa.
+          Syce on juuri avannut ovensa. Ole ensimmäinen, joka listaa autonsa — kuljettajamme tuo sen
+          ostajalle minne tahansa Suomessa.
         </ThemedText>
       </View>
       <PrimaryButton title="Lisää autosi myyntiin" onPress={onSell} className="self-stretch" />
@@ -201,17 +182,6 @@ function SearchInput({
       placeholderTextColor={theme.textSecondary}
       className="py-2 text-base text-ink dark:text-ink-dark"
     />
-  );
-}
-
-function FilterRow({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <View className="gap-1">
-      <ThemedText type="small" themeColor="textSecondary">
-        {label}
-      </ThemedText>
-      <View className="flex-row flex-wrap gap-1">{children}</View>
-    </View>
   );
 }
 
