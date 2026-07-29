@@ -17,7 +17,6 @@ import {
   NavTextLink,
   TopNavBar,
 } from '@/components/desktop-nav';
-import { ModeSwitch } from '@/components/mode-switch';
 import { ThemedText } from '@/components/themed-text';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useIsDesktopWeb } from '@/hooks/use-desktop-layout';
@@ -107,10 +106,7 @@ export default function AppTabs() {
           </BottomBar>
         )}
       </TabList>
-      <View className="flex-1">
-        {!isDesktop && <ModeSwitch />}
-        <TabSlot style={{ flex: 1 }} />
-      </View>
+      <TabSlot style={{ flex: 1 }} />
     </Tabs>
   );
 }
