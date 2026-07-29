@@ -10,25 +10,30 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, Spacing } from '@/constants/theme';
 import { addListing, makeListingId } from '@/features/sell/store';
-import { emptyVehicle, type IdentityMethod, type VehicleInfo } from '@/features/sell/types';
+import { emptyVehicle, type VehicleInfo } from '@/features/sell/types';
 import { useContentMaxWidth } from '@/hooks/use-desktop-layout';
 import { lookupPlate, normalisePlate } from '@/services/plate-lookup';
-import { verifyIdentity } from '@/services/verification';
 
 /**
  * Seller onboarding — build-order slice #1.
- * Flow: identity verification -> plate lookup -> listing details -> location
- * & contact -> review -> done.
+ * Flow: plate lookup -> listing details -> location & contact -> review -> done.
  *
  * Product guardrails baked into the copy here:
  *  - The driver is the default, included part of the service. There is no
  *    "drive it yourself vs use a driver" choice anywhere in this flow.
  *  - City/area is collected only as internal triage (limited driver capacity).
- *  - Identity check and plate lookup are clearly flagged as not-yet-connected.
+ *  - Plate lookup is clearly flagged as not-yet-connected.
  *  - No insurance claims, no invented social proof.
+ *
+ * Deliberately NO identity check to list. Nothing is at risk when someone posts
+ * photos of a car — no money moves and no ownership changes — so a bank-ID wall
+ * here only costs us sellers, who are the scarce side. (Nettiauto and Tori don't
+ * ask either.) Identity gets confirmed when the deal completes and ownership
+ * actually transfers, where it protects someone and where the seller already has
+ * a buyer and so won't drop out.
  */
 
-const STEPS = ['Vahvistus', 'Autosi', 'Ilmoitus', 'Nouto', 'Yhteenveto'] as const;
+const STEPS = ['Autosi', 'Ilmoitus', 'Nouto', 'Yhteenveto'] as const;
 
 export default function SellScreen() {
   const insets = useSafeAreaInsets();
@@ -37,23 +42,18 @@ export default function SellScreen() {
   const [step, setStep] = useState(0);
   const [done, setDone] = useState(false);
 
-  // Step 1 — identity
-  const [identityMethod, setIdentityMethod] = useState<IdentityMethod | null>(null);
-  const [verifying, setVerifying] = useState(false);
-  const [verified, setVerified] = useState(false);
-
-  // Step 2 — vehicle
+  // Step 1 — vehicle
   const [plate, setPlate] = useState('');
   const [lookingUp, setLookingUp] = useState(false);
   const [vehicle, setVehicle] = useState<VehicleInfo>(emptyVehicle);
   const [vehicleFound, setVehicleFound] = useState(false);
 
-  // Step 3 — listing
+  // Step 2 — listing
   const [askingPriceEur, setAskingPriceEur] = useState('');
   const [description, setDescription] = useState('');
   const [knownFaults, setKnownFaults] = useState('');
 
-  // Step 4 — pickup / contact
+  // Step 3 — pickup / contact
   const [sellerName, setSellerName] = useState('');
   const [phone, setPhone] = useState('');
   const [area, setArea] = useState('');
@@ -62,17 +62,6 @@ export default function SellScreen() {
     paddingTop: Platform.OS === 'web' ? Spacing.six : insets.top + Spacing.three,
     paddingBottom: insets.bottom + BottomTabInset + Spacing.four,
   };
-
-  async function runVerify(method: IdentityMethod) {
-    setIdentityMethod(method);
-    setVerifying(true);
-    try {
-      const result = await verifyIdentity(method);
-      setVerified(result.verified);
-    } finally {
-      setVerifying(false);
-    }
-  }
 
   async function runLookup() {
     if (!plate.trim()) return;
@@ -94,26 +83,26 @@ export default function SellScreen() {
   const canContinue = useMemo(() => {
     switch (step) {
       case 0:
-        return verified;
-      case 1:
         return vehicleFound && vehicle.make.trim() !== '' && vehicle.model.trim() !== '';
-      case 2:
+      case 1:
         return askingPriceEur.trim() !== '';
-      case 3:
+      case 2:
         return sellerName.trim() !== '' && phone.trim() !== '' && area.trim() !== '';
-      case 4:
+      case 3:
         return true;
       default:
         return false;
     }
-  }, [step, verified, vehicleFound, vehicle, askingPriceEur, sellerName, phone, area]);
+  }, [step, vehicleFound, vehicle, askingPriceEur, sellerName, phone, area]);
 
   function submit() {
     addListing({
       id: makeListingId(),
       createdAt: new Date().toISOString(),
-      identityVerified: verified,
-      identityMethod,
+      // Nobody is verified at listing time — that happens when the sale
+      // completes and ownership actually transfers.
+      identityVerified: false,
+      identityMethod: null,
       vehicle: { ...vehicle, plate: normalisePlate(plate) },
       askingPriceEur,
       description,
@@ -149,8 +138,6 @@ export default function SellScreen() {
             onPress={() => {
               setDone(false);
               setStep(0);
-              setVerified(false);
-              setIdentityMethod(null);
               setPlate('');
               setVehicle(emptyVehicle);
               setVehicleFound(false);
@@ -179,7 +166,8 @@ export default function SellScreen() {
             <ThemedText type="title">Myy autosi ajamatta sitä minnekään.</ThemedText>
             <ThemedText themeColor="textSecondary">
               Kuljettaja tulee luoksesi, noutaa auton ja toimittaa sen ostajalle. Saat
-              yksityiskaupan hinnan — ilman vaivaa tai matkaa.
+              yksityiskaupan hinnan — ilman vaivaa tai matkaa. Ilmoituksen jättäminen ei vaadi
+              tiliä eikä pankkitunnuksia.
             </ThemedText>
           </View>
         )}
@@ -187,41 +175,6 @@ export default function SellScreen() {
         <StepProgress current={step} total={STEPS.length} label={STEPS[step]} />
 
         {step === 0 && (
-          <View className="gap-3 self-stretch">
-            <ThemedText themeColor="textSecondary">
-              Vahvista ensin, että olet todella sinä. Tarkistamme henkilöllisyyden
-              pankkitunnuksilla tai Mobiilivarmenteella — samoilla luottamusväylillä kuin pankit
-              käyttävät.
-            </ThemedText>
-            <View className="gap-2">
-              <PrimaryButton
-                title="Vahvista pankkitunnuksilla"
-                variant={identityMethod === 'bank-id' && verified ? 'secondary' : 'primary'}
-                loading={verifying && identityMethod === 'bank-id'}
-                onPress={() => runVerify('bank-id')}
-              />
-              <PrimaryButton
-                title="Käytä Mobiilivarmennetta"
-                variant="secondary"
-                loading={verifying && identityMethod === 'mobiilivarmenne'}
-                onPress={() => runVerify('mobiilivarmenne')}
-              />
-            </View>
-            {verified && (
-              <InfoNote tone="info" title="Henkilöllisyys vahvistettu">
-                Vahvistettu {identityMethod === 'bank-id' ? 'pankkitunnuksilla' : 'Mobiilivarmenteella'}.
-                Voit jatkaa.
-              </InfoNote>
-            )}
-            <InfoNote tone="demo" title="Demo — ei vielä kytketty">
-              Tämä on paikkamerkki. Oikea toiminto ohjaa Suomi.fi-tunnistautumiseen
-              (pankkitunnukset / Mobiilivarmenne) Signicatin kautta; pankkitunnuksia ei koskaan
-              käsitellä täällä.
-            </InfoNote>
-          </View>
-        )}
-
-        {step === 1 && (
           <View className="gap-3 self-stretch">
             <ThemedText themeColor="textSecondary">
               Syötä rekisterinumero, niin haemme auton tiedot puolestasi.
@@ -273,7 +226,7 @@ export default function SellScreen() {
           </View>
         )}
 
-        {step === 2 && (
+        {step === 1 && (
           <View className="gap-3 self-stretch">
             <ThemedText themeColor="textSecondary">
               Mitä haluat autosta pyytää, ja mitä ostajan tulisi tietää?
@@ -307,7 +260,7 @@ export default function SellScreen() {
           </View>
         )}
 
-        {step === 3 && (
+        {step === 2 && (
           <View className="gap-3 self-stretch">
             <ThemedText themeColor="textSecondary">
               Mistä kuljettajamme noutaa auton? Sinun ei tarvitse matkustaa minnekään —
@@ -335,11 +288,10 @@ export default function SellScreen() {
           </View>
         )}
 
-        {step === 4 && (
+        {step === 3 && (
           <View className="gap-3 self-stretch">
             <ThemedText themeColor="textSecondary">Nopea tarkistus ennen lähettämistä.</ThemedText>
             <ThemedView type="backgroundElement" className="gap-2 rounded-2xl p-4">
-              <SummaryRow label="Henkilöllisyys" value={verified ? 'Vahvistettu' : 'Ei vahvistettu'} />
               <SummaryRow label="Auto" value={`${vehicle.make} ${vehicle.model} ${vehicle.year}`.trim()} />
               <SummaryRow label="Rekisterinumero" value={normalisePlate(plate)} />
               <SummaryRow label="Mittarilukema" value={vehicle.mileageKm ? `${vehicle.mileageKm} km` : '—'} />
