@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
-import { ScrollView, View } from 'react-native';
+import { useState } from 'react';
+import { Linking, Pressable, ScrollView, TextInput, View, type TextInputProps } from 'react-native';
 
 import { PrimaryButton } from '@/components/form/primary-button';
 import { SiteFooter } from '@/components/site-footer';
@@ -11,6 +12,9 @@ import { useContentMaxWidth, useIsDesktopWeb } from '@/hooks/use-desktop-layout'
 
 /** Exactly the icon names SymbolView accepts — borrowed from its own props. */
 type SymbolName = React.ComponentProps<typeof SymbolView>['name'];
+
+/** Where pickup requests land. Point this at the real inbox before launch. */
+const ORDER_EMAIL = 'hei@syce.fi';
 
 /**
  * Landing page — what a cold visitor sees on desktop web before they've decided
@@ -39,9 +43,9 @@ export function LandingPage() {
               Osta ja myy auto{'\n'}ilman riskiä.
             </ThemedText>
             <ThemedText themeColor="textSecondary" className="max-w-[460px]">
-              Kaksi tuntematonta, iso summa rahaa ja satoja kilometrejä väliä. Syce vahvistaa
-              molempien henkilöllisyyden, ja kuljettajamme tuo auton perille — sinun ei tarvitse
-              ajaa mihinkään.
+              Kaksi tuntematonta, iso summa rahaa ja satoja kilometrejä väliä. Me käymme auton
+              luona, tarkastamme sen ja kerromme mitä löysimme. Kuljettajamme tuo auton perille —
+              sinun ei tarvitse ajaa mihinkään.
             </ThemedText>
 
             <View className="mt-2 flex-row flex-wrap gap-3">
@@ -60,16 +64,16 @@ export function LandingPage() {
           </View>
 
           <View className="flex-1">
-            <DeliveryCard />
+            <OrderCard />
           </View>
         </View>
 
         {/* What Syce actually does */}
         <View className={isDesktop ? 'flex-row' : 'flex-col'} style={{ gap: Spacing.three }}>
           <Point
-            icon={{ ios: 'checkmark.shield.fill', android: 'verified_user', web: 'verified_user' }}
-            title="Molemmat tunnistetaan"
-            body="Myyjä ja ostaja vahvistavat henkilöllisyytensä ennen kuin kauppa etenee."
+            icon={{ ios: 'magnifyingglass', android: 'search', web: 'search' }}
+            title="Tarkastamme auton"
+            body="Käymme auton luona ennen kauppaa, kuvaamme sen ja kerromme viat rehellisesti."
           />
           <Point
             icon={{ ios: 'car.fill', android: 'local_shipping', web: 'local_shipping' }}
@@ -101,34 +105,72 @@ export function LandingPage() {
 }
 
 /**
- * The hero's visual anchor: the handover Syce sells, drawn as seller → driver →
- * buyer. Roles only — no names, prices or ratings, so nothing here can read as
- * a real listing or a real person.
+ * The hero's action card — the page's one conversion point. Collects the two
+ * things needed to price a job (where the car is, where it goes) plus the
+ * listing so we can see the car before calling back.
+ *
+ * There's no backend yet, so submitting opens a prefilled email rather than
+ * pretending the request was stored somewhere.
  */
-function DeliveryCard() {
+function OrderCard() {
+  const [from, setFrom] = useState('');
+  const [to, setTo] = useState('');
+  const [listing, setListing] = useState('');
+
+  const ready = from.trim().length > 0 && to.trim().length > 0;
+
+  function send() {
+    const body = [
+      `Nouto: ${from.trim()}`,
+      `Toimitus: ${to.trim()}`,
+      listing.trim() ? `Ilmoitus: ${listing.trim()}` : null,
+    ]
+      .filter(Boolean)
+      .join('\n');
+
+    const subject = encodeURIComponent('Kuljetus- ja tarkastuspyyntö');
+    Linking.openURL(`mailto:${ORDER_EMAIL}?subject=${subject}&body=${encodeURIComponent(body)}`);
+  }
+
   return (
     <View className="gap-5 rounded-3xl bg-forest p-7">
-      <View className="flex-row items-center">
-        <Endpoint icon={{ ios: 'person.fill', android: 'person', web: 'person' }} label="Myyjä" />
-        <View className="mx-3 mb-6 h-px flex-1 bg-white/25" />
-        <Endpoint icon={{ ios: 'person.fill', android: 'person', web: 'person' }} label="Ostaja" />
+      <View className="gap-1">
+        <ThemedText type="subtitle" className="text-[22px] leading-7" style={{ color: '#FFFFFF' }}>
+          Tilaa kuljetus ja tarkastus
+        </ThemedText>
+        <ThemedText type="small" style={{ color: '#FFFFFFB8' }}>
+          Kerro mistä auto haetaan ja minne se tuodaan. Otamme sinuun yhteyttä.
+        </ThemedText>
       </View>
 
-      <View className="items-center gap-2">
-        <View className="h-16 w-16 items-center justify-center rounded-full bg-terracotta/25">
-          <SymbolView
-            tintColor="#E8B39E"
-            name={{ ios: 'car.fill', android: 'local_shipping', web: 'local_shipping' }}
-            size={26}
-          />
-        </View>
-        <ThemedText type="smallBold" style={{ color: '#FFFFFF' }}>
-          Kuljetus kotiovelle
-        </ThemedText>
-        <ThemedText type="small" className="max-w-[240px] text-center" style={{ color: '#FFFFFFB8' }}>
-          Kuljettajamme hoitaa noudon ja luovutuksen puolestasi.
-        </ThemedText>
+      <View className="gap-3">
+        <CardField label="Mistä" placeholder="Mikkeli" value={from} onChangeText={setFrom} />
+        <CardField label="Minne" placeholder="Helsinki" value={to} onChangeText={setTo} />
+        <CardField
+          label="Linkki ilmoitukseen"
+          placeholder="nettiauto.com/…"
+          value={listing}
+          onChangeText={setListing}
+          autoCapitalize="none"
+          autoCorrect={false}
+          inputMode="url"
+        />
       </View>
+
+      <Pressable
+        accessibilityRole="button"
+        disabled={!ready}
+        onPress={send}
+        className={[
+          'min-h-12 items-center justify-center rounded-full bg-white px-4 py-3 active:opacity-85',
+          ready ? '' : 'opacity-50',
+        ]
+          .filter(Boolean)
+          .join(' ')}>
+        <ThemedText type="smallBold" style={{ color: NavBrand }}>
+          Lähetä pyyntö
+        </ThemedText>
+      </Pressable>
 
       <View className="h-px bg-white/20" />
 
@@ -142,15 +184,18 @@ function DeliveryCard() {
   );
 }
 
-function Endpoint({ icon, label }: { icon: SymbolName; label: string }) {
+/** Text input styled for the forest card — the shared TextField is beige-on-cream. */
+function CardField({ label, ...rest }: TextInputProps & { label: string }) {
   return (
-    <View className="items-center gap-2">
-      <View className="h-11 w-11 items-center justify-center rounded-full bg-white/15">
-        <SymbolView tintColor="#FFFFFF" name={icon} size={19} />
-      </View>
-      <ThemedText type="small" style={{ color: '#FFFFFFD9' }}>
+    <View className="gap-1">
+      <ThemedText type="small" style={{ color: '#FFFFFFB8' }}>
         {label}
       </ThemedText>
+      <TextInput
+        placeholderTextColor="#FFFFFF66"
+        className="rounded-xl border border-white/25 bg-white/10 px-4 py-2.5 text-base text-white"
+        {...rest}
+      />
     </View>
   );
 }

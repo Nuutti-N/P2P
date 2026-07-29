@@ -6,7 +6,6 @@ import { Pressable, TextInput, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Brand, NavBrand } from '@/constants/theme';
-import { useContentMaxWidth } from '@/hooks/use-desktop-layout';
 import { useTheme } from '@/hooks/use-theme';
 
 /**
@@ -15,22 +14,23 @@ import { useTheme } from '@/hooks/use-theme';
  * (unlike BottomBar, which is absolutely positioned to pin to the bottom),
  * so page content simply starts below it — no manual offset needed.
  *
+ * Three zones rather than one centred column: the wordmark sits in the actual
+ * corner of the viewport, the search sits in the middle, and the actions take
+ * the far right. Callers place flexible spacers to make those zones (see
+ * app-tabs.tsx), so this only owns the outer frame.
+ *
  * Color is deliberately restrained here (logo + the one primary action),
  * matching the reference apps rather than the app's own bottom tab bar,
  * which stays solid forest — a native tab bar and a desktop nav are
  * different conventions, not the same chrome at two sizes.
  */
 export function TopNavBar({ children, ...props }: TabListProps) {
-  const maxWidth = useContentMaxWidth();
-
   return (
     <View
       {...props}
-      className="w-full flex-row items-center justify-center border-b border-beige-dark bg-cream px-6 dark:border-surface-dark-selected dark:bg-surface-dark"
+      className="w-full flex-row items-center gap-5 border-b border-beige-dark bg-cream px-12 dark:border-surface-dark-selected dark:bg-surface-dark"
       style={{ height: 72 }}>
-      <View className="w-full flex-1 flex-row items-center gap-5" style={{ maxWidth }}>
-        {children}
-      </View>
+      {children}
     </View>
   );
 }
@@ -95,9 +95,11 @@ export function NavSearchBox() {
   }
 
   return (
+    // Fixed width, not flex-1 — the nav's middle group is content-sized so it
+    // can sit centred; a growing search box would stretch it edge to edge.
     <View
-      className="mx-1 flex-1 flex-row items-center gap-2 rounded-full border border-beige-dark bg-beige py-1 pl-4 pr-1 dark:border-surface-dark-selected dark:bg-surface-dark-element"
-      style={{ maxWidth: 420 }}>
+      className="flex-row items-center gap-2 rounded-full border border-beige-dark bg-beige py-1 pl-4 pr-1 dark:border-surface-dark-selected dark:bg-surface-dark-element"
+      style={{ width: 340 }}>
       <TextInput
         value={text}
         onChangeText={setText}
